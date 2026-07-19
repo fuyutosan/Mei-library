@@ -1261,7 +1261,7 @@ if(searchChipsEl){
   debutCard.closest(".t-cell").appendChild(btn);
   const box=document.createElement("div");
   box.id="lp-player-box";
-  box.innerHTML='<div id="lp-player"></div><div class="lp-note">♪ LOVEペディアと現在まで旅します（広告が出たらごめんね、少し待ってて）</div>';
+  box.innerHTML='<div id="lp-player"></div><div class="lp-note">♪ 再生ボタンを押して、LOVEペディアと旅に出る（広告が出たら、終わるまで待っててね）</div>';
   document.body.appendChild(box);
   let lpPlayer=null, lpRaf=null, startY=0, endY=0, journeyOn=false;
   function expandAllYears(){
@@ -1301,7 +1301,7 @@ if(searchChipsEl){
     if(lpPlayer && lpPlayer.getDuration){
       const dur=lpPlayer.getDuration();
       const cur=lpPlayer.getCurrentTime ? lpPlayer.getCurrentTime() : 0;
-      if(dur>0 && cur>0){
+      if(dur>120 && cur>0){  // 広告は数十秒＝長さ120秒超のときだけ本編と判定
         if(!journeyStarted){ journeyStarted=true; dismissCutin(); }  // 曲がはじまった＝光が晴れて旅がはじまる
         const p=Math.min(1, cur/dur);
         window.scrollTo(0, startY+(endY-startY)*p);
@@ -1328,18 +1328,21 @@ if(searchChipsEl){
     // 本が開ききったら、光に包まれる（曲がはじまるまで光の中で待つ）
     setTimeout(()=>{
       ov.classList.add("lp-light");
-      box.classList.add("lp-center");
+      box.style.zIndex="220";  // 光と同時に中央に現れる
     }, 4100);
   }
   function dismissCutin(){
     if(cutinOv){ const o=cutinOv; cutinOv=null; o.classList.add("out"); setTimeout(()=>o.remove(), 500); }
     box.classList.remove("lp-center");
+    box.style.zIndex="";
   }
   btn.addEventListener("click", ()=>{
     if(journeyOn){ stopLp(); return; }
     showBookCutin();
     expandAllYears();
     box.style.display="block";
+    box.classList.add("lp-center");
+    box.style.zIndex="150";  // 暗転(200)の裏に隠しておく
     setTimeout(()=>{
       startY=debutCard.getBoundingClientRect().top+window.scrollY-window.innerHeight*0.35;
       const nb=document.querySelector(".now-block");
