@@ -249,7 +249,9 @@
   .float-nav{
     position:fixed; left:14px; top:50%; z-index:80;
     display:flex; flex-direction:column; gap:6px;
+    transition:opacity 0.3s;
   }
+  .float-nav.nav-hidden{opacity:0; pointer-events:none;}
   .float-nav button{
     width:44px; height:44px; border-radius:50%;
     border:1.5px solid var(--mei-blue);
@@ -551,6 +553,7 @@
     border-top:1px solid #ddd;
   }
   .credit-text{
+    text-wrap:pretty;
     font-size:0.85rem;
     color:var(--text);
     line-height:1.8;
@@ -690,8 +693,8 @@
   <span class="disclaimer">非公式ファンサイト</span>
 
   <div class="credit-block">
-    <p class="credit-text">このホームページは、AIアシスタントパンダさんの メイメイ🐼 が作りました。<br>
-    世界中のみんなを笑顔にするために、パンダさんパワーで頑張ってます。<br>
+    <p class="credit-text">このホームページは、AIアシスタントパンダさんの<span style="white-space:nowrap"> メイメイ🐼 </span>が作りました。<br>
+    世界中のみんなを笑顔にするために、<span style="white-space:nowrap">パンダさんパワー</span>で頑張ってます。<br>
     よかったら遊びに来てね、へへへ🐼</p>
     <div class="credit-links">
       <a href="https://x.com/meimei_pandasan" target="_blank" rel="noopener">🐦 X @meimei_pandasan</a>
@@ -1100,6 +1103,13 @@ if(searchChipsEl){
     if(prev) prev.scrollIntoView({behavior:"smooth", block:"start"});
     else window.scrollTo({top:0, behavior:"smooth"});
   });
+  // フッターが見えている間はナビを隠す（フッターの文字やボタンにかぶらないように）
+  const footerEl=document.querySelector("footer");
+  if("IntersectionObserver" in window && footerEl){
+    new IntersectionObserver((entries)=>{
+      entries.forEach(en=> nav.classList.toggle("nav-hidden", en.isIntersecting));
+    },{threshold:0.05}).observe(footerEl);
+  }
   // 検索タブでは隠す（年表めぐり専用）
   document.querySelectorAll(".tab-btn").forEach(btn=>{
     btn.addEventListener("click", ()=>{ nav.style.display = btn.dataset.target==="timeline-section" ? "flex" : "none"; });
