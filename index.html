@@ -393,14 +393,27 @@
   .lp-page.p2{animation:lpFlip 0.55s 1.45s forwards ease-in;}
   .lp-page.p3{animation:lpFlip 0.55s 1.75s forwards ease-in;}
   .lp-cover{position:absolute; inset:0;
-    background:linear-gradient(135deg,#f06292 0%, #e91e63 55%, #ad1457 100%);
+    background:linear-gradient(150deg,#c2477e 0%, #b02a63 45%, #8e1e50 100%);
     border-radius:6px 10px 10px 6px;
     transform-origin:left center;
-    display:flex; align-items:center; justify-content:center;
-    color:#fff; font-weight:bold; font-size:1.15rem; letter-spacing:0.06em;
-    animation:lpFlip 0.9s 0.25s forwards ease-in-out;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    animation:lpFlip 0.9s 0.45s forwards ease-in-out;
     backface-visibility:hidden;
+    box-shadow:inset 0 0 0 6px rgba(0,0,0,0), inset 0 0 30px rgba(0,0,0,0.25);
   }
+  .lp-cover::before{content:""; position:absolute; inset:9px;
+    border:2px solid #d9b45a; border-radius:4px; opacity:0.9;}
+  .lp-cover .lpc-title{font-family:"Segoe Script","Brush Script MT",cursive;
+    color:#e8c877; font-size:1.5rem; text-shadow:0 1px 2px rgba(0,0,0,0.35);}
+  .lp-cover .lpc-heart{color:#e8c877; font-size:1.3rem; line-height:1;}
+  .lp-cover .lpc-sub{font-family:"Segoe Script","Brush Script MT",cursive;
+    color:#e8c877; font-size:0.72rem;}
+  .lp-close .lp-cover{transform:rotateY(-165deg); animation:lpClose 0.9s 1.3s forwards ease-in-out;}
+  @keyframes lpClose{to{transform:rotateY(0deg)}}
+  .lp-tbc{position:absolute; right:8%; top:42%; font-size:0.8rem; color:#8a6d3b;
+    font-family:Georgia,serif; font-style:italic; opacity:0; animation:lpFadeIn 0.6s 0.2s forwards;}
+  .lp-thanks{color:#fff; font-size:1.05rem; font-weight:bold; opacity:0;
+    animation:lpFadeIn 0.8s 2.3s forwards; text-wrap:pretty; text-align:center;}
   @keyframes lpFlip{to{transform:rotateY(-165deg)}}
   .lp-note-ad{color:#fff; font-size:0.8rem; opacity:0.85; text-align:center; text-wrap:pretty;}
   /* ===== 検索デモ ===== */
@@ -1246,6 +1259,24 @@ if(searchChipsEl){
     if(lpPlayer && lpPlayer.pauseVideo) lpPlayer.pauseVideo();
     box.style.display="none";
   }
+  function showEndCutin(){
+    const ov=document.createElement("div");
+    ov.id="lp-cutin"; ov.classList.add("lp-close");
+    ov.innerHTML=`<div class="lp-book">
+      <div class="lp-pages"></div>
+      <div class="lp-tbc">To be continued...</div>
+      <div class="lp-cover"><span class="lpc-title">Love Pedia</span><span class="lpc-heart">&#10086;</span><span class="lpc-sub">Morning musume&#12290;'20</span></div>
+    </div>
+    <div class="lp-thanks">びっくりしたけど、楽しかったね。<br>ありがとう、LOVEペディア&#128054;&#57097;</div>`;
+    ov.querySelector(".lp-thanks").innerHTML="びっくりしたけど、楽しかったね。<br>ありがとう、LOVEペディア 🐼";
+    document.body.appendChild(ov);
+    setTimeout(()=>{ ov.classList.add("out"); setTimeout(()=>ov.remove(), 500); }, 5200);
+  }
+  function finishJourney(){
+    window.scrollTo(0, endY);
+    stopLp();
+    showEndCutin();
+  }
   function tick(){
     if(!journeyOn){ return; }
     if(lpPlayer && lpPlayer.getDuration){
@@ -1254,11 +1285,12 @@ if(searchChipsEl){
       if(dur>0 && cur>0){
         const p=Math.min(1, cur/dur);
         window.scrollTo(0, startY+(endY-startY)*p);
-        if(p>=0.999){ stopLp(); return; }
+        if(p>=0.995){ finishJourney(); return; }
       }
     }
     lpRaf=requestAnimationFrame(tick);
   }
+  window.__lpFinishTest=()=>finishJourney();
   ["wheel","touchstart","keydown"].forEach(ev=> window.addEventListener(ev,(e)=>{
     if(e.target && e.target.closest && (e.target.closest("#lp-player-box")||e.target.closest(".lovepedia-btn"))) return;
     if(journeyOn) stopLp();
@@ -1271,7 +1303,7 @@ if(searchChipsEl){
       <div class="lp-page p3"></div>
       <div class="lp-page p2"></div>
       <div class="lp-page p1"></div>
-      <div class="lp-cover">LOVEペディア</div>
+      <div class="lp-cover"><span class="lpc-title">Love Pedia</span><span class="lpc-heart">&#10086;</span><span class="lpc-sub">Morning musume&#12290;'20</span></div>
     </div>
     <div class="lp-note-ad">※YouTubeの曲が再生されます。<span style="white-space:nowrap">広告が流れる</span>可能性があります</div>`;
     document.body.appendChild(ov);
@@ -1294,7 +1326,7 @@ if(searchChipsEl){
           playerVars:{autoplay:1, playsinline:1},
           events:{
             onReady:(e)=>{ e.target.playVideo(); tick(); },
-            onStateChange:(e)=>{ if(e.data===YT.PlayerState.ENDED){ window.scrollTo(0,endY); stopLp(); } }
+            onStateChange:(e)=>{ if(e.data===YT.PlayerState.ENDED && journeyOn){ finishJourney(); } }
           }
         });
       };
