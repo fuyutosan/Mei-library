@@ -758,7 +758,7 @@
 
 <header class="hero">
   <h1>🐼 めいちゃん図書館</h1>
-  <p class="sub">山﨑愛生（やまざき めい）ちゃん<span style="white-space:nowrap">非公式ファンサイト</span></p>
+  <p class="sub">山﨑愛生ちゃん<span style="white-space:nowrap">非公式ファンサイト</span></p>
   <span class="badge">Mei Yamazaki Fan Archive</span>
 </header>
 
@@ -1427,6 +1427,7 @@ if(searchChipsEl){
           if(p.closest("script,style,input,textarea")) return NodeFilter.FILTER_REJECT;
           if(p.closest('[style*="nowrap"]')) return NodeFilter.FILTER_REJECT;
           if(!/[ぁ-んァ-ヶ一-龥]/.test(n.nodeValue)) return NodeFilter.FILTER_REJECT;
+          for(let ci=0;ci<n.nodeValue.length;ci++){const cc=n.nodeValue.charCodeAt(ci); if(cc>=55296&&cc<=57343) return NodeFilter.FILTER_REJECT;}  // 絵文字入りは触らない
           if(n.nodeValue.includes(ZW)) return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         }
