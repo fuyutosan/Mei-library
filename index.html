@@ -275,6 +275,32 @@
     transition:transform 0.15s, box-shadow 0.15s;
   }
   .share-x-btn:hover{transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,51,160,0.3);}
+  .fn-auto-wrap{position:relative;}
+  .fn-speed-pop{
+    position:absolute; left:52px; top:50%; transform:translateY(-50%);
+    display:none; align-items:center; gap:4px;
+    background:rgba(255,255,255,0.95);
+    border:1.5px solid var(--mei-blue);
+    border-radius:999px; padding:6px 10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.15);
+    font-size:0.85rem;
+  }
+  .fn-speed-pop.show{display:flex;}
+  .fn-speed-pop input[type=range]{width:110px; accent-color:var(--mei-blue);}
+  /* CD発売カードの音楽サービスリンク */
+  .music-links{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
+  .music-links a{
+    font-size:0.72rem; font-weight:bold;
+    padding:4px 10px; border-radius:999px;
+    text-decoration:none; color:#fff;
+    transition:transform 0.15s;
+  }
+  .music-links a:hover{transform:translateY(-2px);}
+  .ml-apple{background:#fa445c;}
+  .ml-spotify{background:#1DB954;}
+  .ml-ytm{background:#cc0000;}
+  .t-cell.act .music-links{justify-content:flex-end;}
+  @media (max-width:600px){ .t-cell.act .music-links{justify-content:flex-start;} }
   /* ===== 検索デモ ===== */
   .search-box{
     display:flex;
@@ -636,7 +662,12 @@
   <button id="fn-top" title="一番上へ">&#8648;</button>
   <button id="fn-prev-year" title="前の年へ">&#65085;</button>
   <button id="fn-up" title="少し上へ">&#65087;</button>
-  <button id="fn-auto" title="ゆっくり自動でめぐる">&#9654;</button>
+  <div class="fn-auto-wrap">
+    <button id="fn-auto" title="ゆっくり自動でめぐる">&#9654;</button>
+    <div class="fn-speed-pop" id="fn-speed-pop">
+      <span>&#128034;</span><input type="range" id="fn-speed" min="0.2" max="3" step="0.05" value="0.55"><span>&#128007;</span>
+    </div>
+  </div>
   <button id="fn-down" title="少し下へ">&#65088;</button>
   <button id="fn-next-year" title="次の年へ">&#65086;</button>
   <button id="fn-bottom" title="一番下へ">&#8650;</button>
@@ -679,13 +710,26 @@ function citationHtml(item){
   return "";
 }
 
+function musicLinksHtml(item){
+  // シングル・アルバム発売の項目に配信サービスの検索リンクを付ける
+  if(item.side !== "act") return "";
+  if(!/(シングル|アルバム)/.test(item.text) || !/発売/.test(item.text)) return "";
+  const m = item.text.match(/『([^』]+)』/);
+  if(!m) return "";
+  const q = encodeURIComponent("モーニング娘。 " + m[1].replace(/／/g," "));
+  return `<div class="music-links">
+    <a class="ml-apple" href="https://music.apple.com/jp/search?term=${q}" target="_blank" rel="noopener">&#9834; Apple Music</a>
+    <a class="ml-spotify" href="https://open.spotify.com/search/${q}" target="_blank" rel="noopener">&#9835; Spotify</a>
+    <a class="ml-ytm" href="https://music.youtube.com/search?q=${q}" target="_blank" rel="noopener">&#9654; YT Music</a>
+  </div>`;
+}
 function cellHtmlFor(item, isDetail){
   const isAct = item.side === "act";
   const eraBlue = isAct && item.date >= "2026-08-08" ? " era-blue" : "";
   const cellClass = (isAct ? "act" : "panda") + eraBlue;
   const rowClass = "t-row" + (isDetail ? " detail-item" : "");
   const quoteHtml = item.quote ? `<blockquote>「${item.quote}」</blockquote>` : "";
-  const cellHtml = `<div class="t-cell ${cellClass}"><span class="date">${item.date}</span>${quoteHtml}<div>${item.text}${citationHtml(item)}</div></div>`;
+  const cellHtml = `<div class="t-cell ${cellClass}"><span class="date">${item.date}</span>${quoteHtml}<div>${item.text}${citationHtml(item)}</div>${musicLinksHtml(item)}</div>`;
   const nodeClass = (isAct ? "" : "panda-node") + eraBlue;
   if(isAct){
     return `<div class="${rowClass}">${cellHtml}<div class="t-node ${nodeClass}"></div><div class="t-cell t-empty"></div></div>`;
@@ -990,17 +1034,19 @@ if(searchChipsEl){
   const nav=document.getElementById("float-nav");
   const autoBtn=document.getElementById("fn-auto");
   let autoTimer=null;
-  function stopAuto(){ if(autoTimer){ cancelAnimationFrame(autoTimer); autoTimer=null; autoBtn.classList.remove("auto-on"); autoBtn.innerHTML="&#9654;"; } }
+  function stopAuto(){ if(autoTimer){ cancelAnimationFrame(autoTimer); autoTimer=null; autoBtn.classList.remove("auto-on"); autoBtn.innerHTML="&#9654;"; speedPop.classList.remove("show"); } }
   let autoPos=0;
+  const speedInput=document.getElementById("fn-speed");
+  const speedPop=document.getElementById("fn-speed-pop");
   function autoStep(){
-    autoPos += 0.55;  // 思い出に浸れるゆっくり速度（小数を貯めて確実に進める）
+    autoPos += parseFloat(speedInput.value);  // 速度はスライダーで調整（小数を貯めて確実に進める）
     window.scrollTo(0, autoPos);
     if(window.innerHeight + window.scrollY >= document.body.scrollHeight - 2){ stopAuto(); return; }
     autoTimer=requestAnimationFrame(autoStep);
   }
   autoBtn.addEventListener("click", ()=>{
     if(autoTimer){ stopAuto(); }
-    else{ autoPos=window.scrollY; autoBtn.classList.add("auto-on"); autoBtn.innerHTML="&#10073;&#10073;"; autoTimer=requestAnimationFrame(autoStep); }
+    else{ autoPos=window.scrollY; autoBtn.classList.add("auto-on"); autoBtn.innerHTML="&#10073;&#10073;"; speedPop.classList.add("show"); autoTimer=requestAnimationFrame(autoStep); }
   });
   // 手で操作したら自動めぐりは止める
   ["wheel","touchstart","keydown"].forEach(ev=> window.addEventListener(ev, (e)=>{
