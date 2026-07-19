@@ -633,11 +633,13 @@
 </main>
 
 <div class="float-nav" id="float-nav">
+  <button id="fn-top" title="一番上へ">&#8648;</button>
   <button id="fn-prev-year" title="前の年へ">&#65085;</button>
   <button id="fn-up" title="少し上へ">&#65087;</button>
   <button id="fn-auto" title="ゆっくり自動でめぐる">&#9654;</button>
   <button id="fn-down" title="少し下へ">&#65088;</button>
   <button id="fn-next-year" title="次の年へ">&#65086;</button>
+  <button id="fn-bottom" title="一番下へ">&#8650;</button>
 </div>
 <footer>
   <p>掲載データは公開情報・公式ブログの一部引用に基づく非公式まとめです。全文は各記事のリンクから公式ブログでお読みください。</p>
@@ -1005,6 +1007,8 @@ if(searchChipsEl){
     if(e.target && e.target.closest && e.target.closest("#float-nav")) return;  // ナビ自身の操作は無視
     stopAuto();
   }, {passive:true}));
+  document.getElementById("fn-top").addEventListener("click", ()=>{ stopAuto(); window.scrollTo({top:0, behavior:"smooth"}); });
+  document.getElementById("fn-bottom").addEventListener("click", ()=>{ stopAuto(); window.scrollTo({top:document.body.scrollHeight, behavior:"smooth"}); });
   document.getElementById("fn-up").addEventListener("click", ()=>{ stopAuto(); window.scrollBy({top:-window.innerHeight*0.8, behavior:"smooth"}); });
   document.getElementById("fn-down").addEventListener("click", ()=>{ stopAuto(); window.scrollBy({top:window.innerHeight*0.8, behavior:"smooth"}); });
   function banners(){ return [...document.querySelectorAll(".year-banner")]; }
