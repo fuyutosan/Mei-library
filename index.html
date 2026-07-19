@@ -397,7 +397,7 @@
     border-radius:6px 10px 10px 6px;
     transform-origin:left center;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
-    animation:lpFlip 0.9s 0.45s forwards ease-in-out;
+    animation:lpFlip 0.95s 2.9s forwards ease-in-out;
     backface-visibility:hidden;
     box-shadow:inset 0 0 0 6px rgba(0,0,0,0), inset 0 0 30px rgba(0,0,0,0.25);
   }
@@ -1321,9 +1321,6 @@ if(searchChipsEl){
     ov.id="lp-cutin"; cutinOv=ov;
     ov.innerHTML=`<div class="lp-glow"></div><div class="lp-book">
       <div class="lp-pages"></div>
-      <div class="lp-page p3"></div>
-      <div class="lp-page p2"></div>
-      <div class="lp-page p1"></div>
       <div class="lp-cover"><span class="lpc-title">Love Pedia</span><span class="lpc-heart"><span>&#127827;</span><span>&#127827;</span><span>&#127827;</span></span><span class="lpc-sub">Morning musume&#12290;'20</span></div>
     </div>
     <div class="lp-note-ad">※音が出ます。<span style="white-space:nowrap">広告が流れたら</span>、終わるまでちょっと待っててね。<br><span style="white-space:nowrap">曲がはじまると</span>、旅がはじまるよ</div>`;
@@ -1332,7 +1329,7 @@ if(searchChipsEl){
     setTimeout(()=>{
       ov.classList.add("lp-light");
       box.classList.add("lp-center");
-    }, 1900);
+    }, 4100);
   }
   function dismissCutin(){
     if(cutinOv){ const o=cutinOv; cutinOv=null; o.classList.add("out"); setTimeout(()=>o.remove(), 500); }
