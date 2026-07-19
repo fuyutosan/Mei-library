@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta property="og:title" content="めいちゃん図書館">
+<meta property="og:description" content="山﨑愛生ちゃんの歩みとパンダさん愛がわかる二軸年表と、ブログ全2283記事検索。非公式ファンサイト。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://fuyutosan.github.io/Mei-library/">
+<meta property="og:image" content="https://fuyutosan.github.io/Mei-library/ogp.png">
+<meta name="twitter:card" content="summary_large_image">
 <title>めいちゃん図書館</title>
 <style>
   :root{
@@ -233,6 +239,26 @@
   @media (max-width:600px){
     .t-row{grid-template-rows:auto auto;}
   }
+
+
+  /* ===== 左下フロートナビ（年表めぐり） ===== */
+  .float-nav{
+    position:fixed; left:14px; bottom:18px; z-index:80;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .float-nav button{
+    width:44px; height:44px; border-radius:50%;
+    border:1.5px solid var(--mei-blue);
+    background:rgba(255,255,255,0.92);
+    color:var(--mei-blue);
+    font-size:1.05rem; font-weight:bold; cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,0.15);
+    transition:transform 0.15s, background 0.15s;
+    line-height:1;
+  }
+  .float-nav button:hover{transform:translateY(-2px); background:#fff;}
+  .float-nav button.auto-on{background:var(--mei-blue); color:#fff;}
+  @media (max-width:600px){ .float-nav{left:8px; bottom:12px;} .float-nav button{width:40px;height:40px;} }
 
   /* ===== 検索デモ ===== */
   .search-box{
@@ -591,6 +617,13 @@
   </section>
 </main>
 
+<div class="float-nav" id="float-nav">
+  <button id="fn-prev-year" title="前の年へ">&#65085;</button>
+  <button id="fn-up" title="少し上へ">&#65087;</button>
+  <button id="fn-auto" title="ゆっくり自動でめぐる">&#9654;</button>
+  <button id="fn-down" title="少し下へ">&#65088;</button>
+  <button id="fn-next-year" title="次の年へ">&#65086;</button>
+</div>
 <footer>
   <p>掲載データは公開情報・公式ブログの一部引用に基づく非公式まとめです。全文は各記事のリンクから公式ブログでお読みください。</p>
   <span class="disclaimer">非公式ファンサイト</span>
@@ -932,6 +965,44 @@ if(searchChipsEl){
     });
   });
 }
+
+// ===== 左下フロートナビ：年ジャンプ・ページ送り・ゆっくり自動めぐり =====
+(function(){
+  const nav=document.getElementById("float-nav");
+  const autoBtn=document.getElementById("fn-auto");
+  let autoTimer=null;
+  function stopAuto(){ if(autoTimer){ cancelAnimationFrame(autoTimer); autoTimer=null; autoBtn.classList.remove("auto-on"); autoBtn.innerHTML="&#9654;"; } }
+  function autoStep(){
+    window.scrollBy(0, 0.55);  // 思い出に浸れるゆっくり速度
+    if(window.innerHeight + window.scrollY >= document.body.scrollHeight - 2){ stopAuto(); return; }
+    autoTimer=requestAnimationFrame(autoStep);
+  }
+  autoBtn.addEventListener("click", ()=>{
+    if(autoTimer){ stopAuto(); }
+    else{ autoBtn.classList.add("auto-on"); autoBtn.innerHTML="&#10073;&#10073;"; autoTimer=requestAnimationFrame(autoStep); }
+  });
+  // 手で操作したら自動めぐりは止める
+  ["wheel","touchstart","keydown"].forEach(ev=> window.addEventListener(ev, stopAuto, {passive:true}));
+  document.getElementById("fn-up").addEventListener("click", ()=>{ stopAuto(); window.scrollBy({top:-window.innerHeight*0.8, behavior:"smooth"}); });
+  document.getElementById("fn-down").addEventListener("click", ()=>{ stopAuto(); window.scrollBy({top:window.innerHeight*0.8, behavior:"smooth"}); });
+  function banners(){ return [...document.querySelectorAll(".year-banner")]; }
+  document.getElementById("fn-next-year").addEventListener("click", ()=>{
+    stopAuto();
+    const next=banners().find(b=> b.getBoundingClientRect().top > 80);
+    if(next) next.scrollIntoView({behavior:"smooth", block:"start"});
+    else document.querySelector(".now-block")?.scrollIntoView({behavior:"smooth"});
+  });
+  document.getElementById("fn-prev-year").addEventListener("click", ()=>{
+    stopAuto();
+    const prev=[...banners()].reverse().find(b=> b.getBoundingClientRect().top < -40);
+    if(prev) prev.scrollIntoView({behavior:"smooth", block:"start"});
+    else window.scrollTo({top:0, behavior:"smooth"});
+  });
+  // 検索タブでは隠す（年表めぐり専用）
+  document.querySelectorAll(".tab-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ nav.style.display = btn.dataset.target==="timeline-section" ? "flex" : "none"; });
+  });
+})();
 </script>
 
 </body>
