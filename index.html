@@ -1142,22 +1142,39 @@ if(searchChipsEl){
 })();
 
 // ===== ♪▶ 曲と一緒に年表をめぐる（本人が押したときだけ音が出る） =====
-// v2: 固定速度スクロール×CD発売カード通過で曲が切り替わる同期モード
+// v3: 区間等分方式——各シングルの2〜3曲を次のCDまでの距離に等分配置して切り替える
 (function(){
   const btn=document.getElementById("music-journey-btn");
   if(!btn) return;
-  const SYNC_TRACKS={"純情エビデンス/ギューされたいだけなのに":"spotify:track:6v2y0CJDVNMm818GzeApPW","Teenage Solution/よしよししてほしいの/ビートの惑星":"spotify:track:1TlxcyleFL90eVmP2hylJ3","Chu Chu Chu 僕らの未来/大・人生 Never Been Better!":"spotify:track:1uDYdlcbzHlpnlZ6iCTkQX","Swing Swing Paradise/Happy birthday to Me!":"spotify:track:17h4DHkMGPMikt6euWyReh","すっごいFEVER！/Wake-up Call/Neverending Shine":"spotify:track:3aQ5RlJ3rbS0xA3Sq3vxNk","なんだかセンチメンタルな時の歌/最KIYOU":"spotify:track:0xqxOqL85CQa7DzS25QWoW","気になるその気の歌/明るく良い子":"spotify:track:6sUFkQJ8Z1B6lCJnNqzW8E","てか HAPPYのHAPPY！/私のラミンタッチオーネ":"spotify:track:5y6yU4VUvK4WSBVKgA87nP","KOKORO&KARADA／LOVEペディア／人間関係No way way":"spotify:track:52uWx0FAr0ijggdOJtS2QI"};
-  const FIRST_URI=SYNC_TRACKS["KOKORO&KARADA／LOVEペディア／人間関係No way way"];
-  let spCtrl=null, apiLoading=false, musicMode=false, currentUri=null, lastDur=0;
+  const SYNC_PLAN=[{"key":null,"uris":["spotify:track:52uWx0FAr0ijggdOJtS2QI","spotify:track:7jndQa27OJ9gV9aGQTedJL","spotify:track:4rwo5w3L1RtO2d64JhIz8p"],"names":["KOKORO&KARADA - Instrumental","LOVEペディア - Instrumental","人間関係No way way - Instrumental"]},{"key":"純情エビデンス/ギューされたいだけなのに","uris":["spotify:track:6v2y0CJDVNMm818GzeApPW","spotify:track:0AzpLzrp08UEbzausfUyzR"],"names":["純情エビデンス - Instrumental","ギューされたいだけなのに - Instrumental"]},{"key":"Teenage Solution/よしよししてほしいの/ビートの惑星","uris":["spotify:track:1TlxcyleFL90eVmP2hylJ3","spotify:track:7Bpp10EVM8ZCtbqMg6XJBq","spotify:track:2yL8cWVwEsje5LnZL8LD2r"],"names":["Teenage Solution - Instrumental","よしよししてほしいの - Instrumental","ビートの惑星 - Instrumental"]},{"key":"Chu Chu Chu 僕らの未来/大・人生 Never Been Better!","uris":["spotify:track:1uDYdlcbzHlpnlZ6iCTkQX","spotify:track:5SCuu7CINT3n9T9dnqnYUS"],"names":["Chu Chu Chu 僕らの未来 - Instrumental","大･人生 Never Been Better！ - Instrumental"]},{"key":"Swing Swing Paradise/Happy birthday to Me!","uris":["spotify:track:17h4DHkMGPMikt6euWyReh","spotify:track:6TyckdAwUdHD2v2GZmnbkM"],"names":["Swing Swing Paradise - Special Edit Instrumental","Happy birthday to Me！ - Instrumental"]},{"key":"すっごいFEVER！/Wake-up Call/Neverending Shine","uris":["spotify:track:3aQ5RlJ3rbS0xA3Sq3vxNk","spotify:track:1S5F1WZ544aym3SaDQBfo3"],"names":["すっごいFEVER！ - Instrumental","Wake-up Call～目覚めるとき～ - Instrumental"]},{"key":"なんだかセンチメンタルな時の歌/最KIYOU","uris":["spotify:track:0xqxOqL85CQa7DzS25QWoW","spotify:track:0U7KCppu1z8QfNqbdwan9S"],"names":["なんだかセンチメンタルな時の歌 - Instrumental","最KIYOU - Instrumental"]},{"key":"気になるその気の歌/明るく良い子","uris":["spotify:track:6sUFkQJ8Z1B6lCJnNqzW8E","spotify:track:2tbmBJ9dLUeKLXLAbHjIHo"],"names":["気になるその気の歌 - Instrumental","明るく良い子 - Instrumental"]},{"key":"てか HAPPYのHAPPY！/私のラミンタッチオーネ","uris":["spotify:track:5y6yU4VUvK4WSBVKgA87nP","spotify:track:5oM3FW7OblUGVp9hBhK7Zf"],"names":["てか HAPPYのHAPPY！ - Instrumental","私のラミンタッチオーネ（Lamentazione） - Instrumental"]}];
+  let spCtrl=null, apiLoading=false, musicMode=false, currentUri=null;
+  let switchPoints=[];
   function expandAllYears(){
     document.querySelectorAll(".year-toggle-btn").forEach(b=>{
       const block=document.getElementById(b.dataset.target);
       if(block && !block.classList.contains("open")) b.click();
     });
   }
-  function startScroll(){
-    const auto=document.getElementById("fn-auto");
-    if(auto && !auto.classList.contains("auto-on")) auto.click();
+  function cardY(key){
+    const el=document.querySelector(`.music-links[data-mtitle="${key.replace(/"/g,'')}"]`);
+    if(!el) return null;
+    return el.getBoundingClientRect().top + window.scrollY;
+  }
+  function buildSwitchPoints(){
+    // 区間の境界＝各シングルのCD発売カード位置（先頭区間はページ上端から）
+    const bounds=[];
+    SYNC_PLAN.forEach(seg=>{ bounds.push(seg.key===null ? 0 : (cardY(seg.key) ?? null)); });
+    bounds.push(document.body.scrollHeight - window.innerHeight); // 最終境界＝ページ末尾
+    switchPoints=[];
+    for(let i=0;i<SYNC_PLAN.length;i++){
+      const a=bounds[i], b=bounds[i+1];
+      if(a===null || b===null || b<=a) continue;
+      const n=SYNC_PLAN[i].uris.length;
+      for(let t=0;t<n;t++){
+        switchPoints.push({y: a + (b-a)*t/n, uri: SYNC_PLAN[i].uris[t]});
+      }
+    }
+    switchPoints.sort((x,y)=>x.y-y.y);
   }
   function switchTo(uri){
     if(!spCtrl || !uri || uri===currentUri) return;
@@ -1165,35 +1182,33 @@ if(searchChipsEl){
     spCtrl.loadUri(uri);
     spCtrl.play();
   }
-  // CD発売カードが画面中央帯に入ったら、その曲へ切り替え
-  const io2=new IntersectionObserver((ents)=>{
-    if(!musicMode) return;
-    ents.forEach(en=>{
-      if(!en.isIntersecting) return;
-      const t=en.target.getAttribute("data-mtitle");
-      if(t && SYNC_TRACKS[t]) switchTo(SYNC_TRACKS[t]);
-    });
-  },{rootMargin:"-35% 0px -35% 0px"});
-  function armObservers(){
-    document.querySelectorAll(".music-links[data-mtitle]").forEach(el=> io2.observe(el));
+  function checkPosition(){
+    if(!musicMode || !switchPoints.length) return;
+    const y=window.scrollY + window.innerHeight*0.4;
+    let pick=switchPoints[0];
+    for(const p of switchPoints){ if(p.y<=y) pick=p; else break; }
+    switchTo(pick.uri);
   }
+  window.addEventListener("scroll", ()=>{ if(musicMode) checkPosition(); }, {passive:true});
+  window.addEventListener("resize", ()=>{ if(musicMode) buildSwitchPoints(); });
   btn.addEventListener("click", ()=>{
     musicMode=true;
     expandAllYears();
-    armObservers();
-    startScroll();
-    if(spCtrl){ if(!currentUri){ switchTo(FIRST_URI); } else { spCtrl.play(); } return; }
+    // 展開後のレイアウト確定を待ってから位置を測る
+    setTimeout(()=>{ buildSwitchPoints(); checkPosition(); }, 400);
+    const auto=document.getElementById("fn-auto");
+    if(auto && !auto.classList.contains("auto-on")) auto.click();
+    if(spCtrl){ spCtrl.play(); return; }
     if(apiLoading) return;
     apiLoading=true;
     window.onSpotifyIframeApiReady=(API)=>{
       API.createController(document.getElementById("spotify-embed"),
-        {uri:FIRST_URI, height:152},
+        {uri:SYNC_PLAN[0].uris[0], height:152},
         (c)=>{
-          spCtrl=c; currentUri=FIRST_URI;
+          spCtrl=c; currentUri=SYNC_PLAN[0].uris[0];
           c.addListener("playback_update",(e)=>{
-            // 曲が終わったら次のカードまでループでつなぐ（30秒プレビューの無音対策）
             const d=e.data||{};
-            if(d.duration>0){ lastDur=d.duration; }
+            // 曲が終わったら頭からループ（次の切り替え点まで無音にしない）
             if(musicMode && d.duration>0 && d.position>=d.duration-600 && !d.isPaused){
               c.seek(0);
             }
