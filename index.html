@@ -333,6 +333,24 @@
   }
   #music-journey-btn:hover{transform:translateY(-2px); box-shadow:0 4px 14px rgba(0,51,160,0.3);}
   .pl-note{font-size:0.75rem; color:var(--muted); margin:8px 0 0;}
+  .rare-panda-box{
+    margin-top:14px;
+    background:#fff;
+    border:2px dashed var(--panda-black);
+    border-radius:12px;
+    padding:14px 16px;
+    text-align:center;
+  }
+  .rare-head{font-weight:bold; font-size:0.92rem; text-wrap:balance;}
+  .rare-sub{font-size:0.8rem; color:var(--muted); margin:4px 0 10px;}
+  .rare-links{display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+  .rare-links a{
+    font-size:0.78rem; font-weight:bold;
+    background:var(--panda-black); color:#fff;
+    padding:6px 12px; border-radius:999px; text-decoration:none;
+    transition:transform 0.15s;
+  }
+  .rare-links a:hover{transform:translateY(-2px);}
   /* ===== 検索デモ ===== */
   .search-box{
     display:flex;
@@ -1047,6 +1065,17 @@ function renderStatCards(){
     <span class="stat-number">${escapeHtmlG(s.number)}</span>
     <span class="stat-label">${escapeHtmlG(s.label)}</span>
   </div>`).join("");
+  // 逆にパンダさんが登場しなかった激レア3記事（全2,283記事中）
+  const RARE_NO_PANDA=[
+    {d:"2022-05-23", no:"No.1042", e:"12744351838"},
+    {d:"2023-11-17", no:"No.1583", e:"12829052918"},
+    {d:"2025-03-22", no:"No.1987 「同期」", e:"12890964614"}
+  ];
+  el.insertAdjacentHTML("afterend", `<div class="rare-panda-box">
+    <div class="rare-head">🔎 逆に……パンダさんが登場<span style="white-space:nowrap">しなかった</span>のは、たった3記事。</div>
+    <div class="rare-sub">0.1%の<span style="white-space:nowrap">激レア記事</span>、読んでみる?</div>
+    <div class="rare-links">${RARE_NO_PANDA.map(r=>`<a href="https://ameblo.jp/morningmusume15ki/entry-${r.e}.html" target="_blank" rel="noopener">${r.d} ${r.no}</a>`).join("")}</div>
+  </div>`);
 }
 renderStatCards();
 
