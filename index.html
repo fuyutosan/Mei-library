@@ -972,14 +972,16 @@ if(searchChipsEl){
   const autoBtn=document.getElementById("fn-auto");
   let autoTimer=null;
   function stopAuto(){ if(autoTimer){ cancelAnimationFrame(autoTimer); autoTimer=null; autoBtn.classList.remove("auto-on"); autoBtn.innerHTML="&#9654;"; } }
+  let autoPos=0;
   function autoStep(){
-    window.scrollBy(0, 0.55);  // 思い出に浸れるゆっくり速度
+    autoPos += 0.55;  // 思い出に浸れるゆっくり速度（小数を貯めて確実に進める）
+    window.scrollTo(0, autoPos);
     if(window.innerHeight + window.scrollY >= document.body.scrollHeight - 2){ stopAuto(); return; }
     autoTimer=requestAnimationFrame(autoStep);
   }
   autoBtn.addEventListener("click", ()=>{
     if(autoTimer){ stopAuto(); }
-    else{ autoBtn.classList.add("auto-on"); autoBtn.innerHTML="&#10073;&#10073;"; autoTimer=requestAnimationFrame(autoStep); }
+    else{ autoPos=window.scrollY; autoBtn.classList.add("auto-on"); autoBtn.innerHTML="&#10073;&#10073;"; autoTimer=requestAnimationFrame(autoStep); }
   });
   // 手で操作したら自動めぐりは止める
   ["wheel","touchstart","keydown"].forEach(ev=> window.addEventListener(ev, (e)=>{
