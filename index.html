@@ -1272,6 +1272,7 @@ if(searchChipsEl){
     });
   }
   function stopLp(){
+    lplog("stopLp");
     journeyOn=false;
     journeyStarted=false;
     dismissCutin();
@@ -1314,7 +1315,7 @@ if(searchChipsEl){
       if(isContent && dur>120 && cur>0){
         if(!journeyStarted){
           if(performance.now()-cutinT0 < CUTIN_MIN_MS){ lpRaf=requestAnimationFrame(tick); return; }
-          journeyStarted=true; dismissCutin();  // 光が晴れて旅がはじまる
+          journeyStarted=true; lplog("journeyStart cur="+Math.round(cur)+" dur="+Math.round(dur)); dismissCutin();
         }
         const span=Math.max(10, dur-END_EARLY-START_HOLD);
         const p=Math.min(1, Math.max(0, (cur-START_HOLD)/span));
@@ -1330,6 +1331,8 @@ if(searchChipsEl){
     if(journeyOn) stopLp();
   },{passive:true}));
   let cutinOv=null, journeyStarted=false, cutinT0=0;
+  window.__lpLog=[];
+  function lplog(ev){ window.__lpLog.push([Math.round(performance.now()), ev]); }
   const CUTIN_MIN_MS=5600;  // 表紙鑑賞→パカッ→光まで、曲が先に始まっても必ず見せる
   function showBookCutin(){
     const ov=document.createElement("div");
@@ -1347,6 +1350,7 @@ if(searchChipsEl){
     }, 4100);
   }
   function dismissCutin(){
+    lplog("dismiss");
     if(cutinOv){ const o=cutinOv; cutinOv=null; o.classList.add("out"); setTimeout(()=>o.remove(), 500); }
     box.classList.remove("lp-center");
     box.style.zIndex="";
@@ -1354,6 +1358,7 @@ if(searchChipsEl){
   btn.addEventListener("click", ()=>{
     if(journeyOn){ stopLp(); return; }
     cutinT0=performance.now();
+    lplog("click");
     showBookCutin();
     expandAllYears();
     box.style.display="block";
