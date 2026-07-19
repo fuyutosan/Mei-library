@@ -287,6 +287,16 @@
   }
   .fn-speed-pop.show{display:flex;}
   .fn-speed-pop input[type=range]{width:110px; accent-color:var(--mei-blue);}
+  /* 触らないと2.5秒で縦長ミニバーに最小化（タップで再展開） */
+  .fn-speed-pop.mini{
+    padding:0; width:12px; height:44px;
+    border-radius:8px;
+    background:linear-gradient(to bottom, var(--mei-brightgreen), var(--mei-blue));
+    border-color:rgba(255,255,255,0.7);
+    cursor:pointer;
+    justify-content:center;
+  }
+  .fn-speed-pop.mini > *{display:none;}
   /* CD発売カードの音楽サービスリンク */
   .music-links{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
   .music-links a{
@@ -1034,10 +1044,20 @@ if(searchChipsEl){
   const nav=document.getElementById("float-nav");
   const autoBtn=document.getElementById("fn-auto");
   let autoTimer=null;
-  function stopAuto(){ if(autoTimer){ cancelAnimationFrame(autoTimer); autoTimer=null; autoBtn.classList.remove("auto-on"); autoBtn.innerHTML="&#9654;"; speedPop.classList.remove("show"); } }
+  function stopAuto(){ if(autoTimer){ cancelAnimationFrame(autoTimer); autoTimer=null; autoBtn.classList.remove("auto-on"); autoBtn.innerHTML="&#9654;"; speedPop.classList.remove("show"); speedPop.classList.remove("mini"); clearTimeout(speedIdleTimer); } }
   let autoPos=0;
   const speedInput=document.getElementById("fn-speed");
   const speedPop=document.getElementById("fn-speed-pop");
+  let speedIdleTimer=null;
+  function armSpeedIdle(){
+    clearTimeout(speedIdleTimer);
+    speedIdleTimer=setTimeout(()=>speedPop.classList.add("mini"), 2500);
+  }
+  speedPop.addEventListener("click", (e)=>{
+    if(speedPop.classList.contains("mini")){ speedPop.classList.remove("mini"); armSpeedIdle(); }
+  });
+  ["input","pointerdown","mouseenter","touchstart"].forEach(ev=>
+    speedInput.addEventListener(ev, armSpeedIdle, {passive:true}));
   function autoStep(){
     autoPos += parseFloat(speedInput.value);  // 速度はスライダーで調整（小数を貯めて確実に進める）
     window.scrollTo(0, autoPos);
@@ -1046,7 +1066,7 @@ if(searchChipsEl){
   }
   autoBtn.addEventListener("click", ()=>{
     if(autoTimer){ stopAuto(); }
-    else{ autoPos=window.scrollY; autoBtn.classList.add("auto-on"); autoBtn.innerHTML="&#10073;&#10073;"; speedPop.classList.add("show"); autoTimer=requestAnimationFrame(autoStep); }
+    else{ autoPos=window.scrollY; autoBtn.classList.add("auto-on"); autoBtn.innerHTML="&#10073;&#10073;"; speedPop.classList.add("show"); speedPop.classList.remove("mini"); armSpeedIdle(); autoTimer=requestAnimationFrame(autoStep); }
   });
   // 手で操作したら自動めぐりは止める
   ["wheel","touchstart","keydown"].forEach(ev=> window.addEventListener(ev, (e)=>{
