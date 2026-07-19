@@ -34,8 +34,8 @@
     background:var(--bg);
     color:var(--text);
     line-height:1.7;
-    /* 日本語の文節の途中で改行しない（対応ブラウザでは文節単位で折り返す） */
-    word-break:auto-phrase;
+    /* 日本語の文節の途中で改行しない:BudouXが入れる区切りでだけ折り返す（全ブラウザ対応） */
+    word-break:keep-all;
     overflow-wrap:anywhere;
   }
   h1,h2,h3{text-wrap:balance;}
@@ -1026,6 +1026,7 @@ function doSearch(){
     results = blogData.filter(row => row[1].includes(q)).map(([d,t,e])=>({date:d,title:t,entryId:e,snippet:""}));
   }
   renderResults(results, q);
+  if(window.__budouxApply) window.__budouxApply(resultsEl);
 }
 
 let debounceTimer = null;
@@ -1290,12 +1291,12 @@ if(searchChipsEl){
     </div>
     <div class="lp-thanks">
       <span class="tl" style="color:#8edcf5; animation-delay:2.3s">いろいろあったね</span>
-      <span class="tl" style="color:#6fd45f; animation-delay:3.1s">でも、楽しかったよね！</span>
-      <span class="tl" style="color:#ffd94a; animation-delay:3.9s">ね！楽しかった！</span>
-      <span class="tl" style="color:#7d9dff; animation-delay:6.1s">ありがとう、LOVEペディア</span>
+      <span class="tl" style="color:#6fd45f; animation-delay:3.3s">でも、楽しかったよね！</span>
+      <span class="tl" style="color:#ffd94a; animation-delay:4.3s">ね！楽しかった！</span>
+      <span class="tl" style="color:#7d9dff; animation-delay:6.5s">ありがとう、LOVEペディア</span>
     </div>`;
     document.body.appendChild(ov);
-    setTimeout(()=>{ ov.classList.add("out"); setTimeout(()=>ov.remove(), 500); }, 8800);
+    setTimeout(()=>{ ov.classList.add("out"); setTimeout(()=>ov.remove(), 500); }, 9400);
   }
   function finishJourney(){
     window.scrollTo(0, endY);
@@ -1385,6 +1386,33 @@ if(searchChipsEl){
       document.head.appendChild(s);
     }, 450);
   });
+})();
+
+// ===== BudouX:日本語を文節単位でだけ折り返す（Safari対応の本命） =====
+(async function(){
+  try{
+    const m=await import("https://cdn.jsdelivr.net/npm/budoux@0.6.2/+esm");
+    const parser=m.loadDefaultJapaneseParser();
+    const ZW="​";
+    function apply(root){
+      const walker=document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode:(n)=>{
+          const p=n.parentElement;
+          if(!p) return NodeFilter.FILTER_REJECT;
+          if(p.closest("script,style,input,textarea")) return NodeFilter.FILTER_REJECT;
+          if(p.closest('[style*="nowrap"]')) return NodeFilter.FILTER_REJECT;
+          if(!/[ぁ-んァ-ヶ一-龥]/.test(n.nodeValue)) return NodeFilter.FILTER_REJECT;
+          if(n.nodeValue.includes(ZW)) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      const nodes=[]; let nd;
+      while(nd=walker.nextNode()) nodes.push(nd);
+      nodes.forEach(n=>{ n.nodeValue=parser.parse(n.nodeValue).join(ZW); });
+    }
+    window.__budouxApply=apply;
+    apply(document.body);
+  }catch(e){ /* 読み込めない環境ではそのまま（既定の折り返し） */ }
 })();
 </script>
 
