@@ -565,12 +565,15 @@
   }
   .credit-links a{
     font-size:0.82rem;
+    font-weight:bold;
     text-decoration:none;
-    background:#eef2fc;
+    background:var(--mei-blue);
+    color:#fff;
     padding:6px 14px;
     border-radius:999px;
+    transition:transform 0.15s, box-shadow 0.15s;
   }
-  .credit-links a:hover{background:var(--mei-blue); color:#fff;}
+  .credit-links a:hover{transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,51,160,0.35);}
 
   /* ===== 年バナー・詳細トグル ===== */
   .year-banner{
