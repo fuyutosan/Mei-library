@@ -982,7 +982,10 @@ if(searchChipsEl){
     else{ autoBtn.classList.add("auto-on"); autoBtn.innerHTML="&#10073;&#10073;"; autoTimer=requestAnimationFrame(autoStep); }
   });
   // 手で操作したら自動めぐりは止める
-  ["wheel","touchstart","keydown"].forEach(ev=> window.addEventListener(ev, stopAuto, {passive:true}));
+  ["wheel","touchstart","keydown"].forEach(ev=> window.addEventListener(ev, (e)=>{
+    if(e.target && e.target.closest && e.target.closest("#float-nav")) return;  // ナビ自身の操作は無視
+    stopAuto();
+  }, {passive:true}));
   document.getElementById("fn-up").addEventListener("click", ()=>{ stopAuto(); window.scrollBy({top:-window.innerHeight*0.8, behavior:"smooth"}); });
   document.getElementById("fn-down").addEventListener("click", ()=>{ stopAuto(); window.scrollBy({top:window.innerHeight*0.8, behavior:"smooth"}); });
   function banners(){ return [...document.querySelectorAll(".year-banner")]; }
