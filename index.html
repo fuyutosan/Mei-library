@@ -1301,19 +1301,25 @@ if(searchChipsEl){
     stopLp();
     showEndCutin();
   }
+  const START_HOLD=1.2;  // 旅の冒頭、デビューカードを見せる静止時間（秒）
+  const END_EARLY=2.0;   // 動画終了より2秒早くスクロールを完走させる
   function tick(){
     if(!journeyOn){ return; }
     if(lpPlayer && lpPlayer.getDuration){
       const dur=lpPlayer.getDuration();
       const cur=lpPlayer.getCurrentTime ? lpPlayer.getCurrentTime() : 0;
-      if(dur>120 && cur>0){  // 広告は数十秒＝長さ120秒超のときだけ本編と判定
+      // 「いま流れてるのがLOVEペディア本体か」をIDで照合（広告は別IDなので確実に待てる）
+      const vd=lpPlayer.getVideoData ? lpPlayer.getVideoData() : null;
+      const isContent=!vd || !vd.video_id || vd.video_id===LP_VIDEO;
+      if(isContent && dur>120 && cur>0){
         if(!journeyStarted){
-          if(performance.now()-cutinT0 < CUTIN_MIN_MS){ lpRaf=requestAnimationFrame(tick); return; }  // 演出が終わるまで待つ
+          if(performance.now()-cutinT0 < CUTIN_MIN_MS){ lpRaf=requestAnimationFrame(tick); return; }
           journeyStarted=true; dismissCutin();  // 光が晴れて旅がはじまる
         }
-        const p=Math.min(1, cur/dur);
+        const span=Math.max(10, dur-END_EARLY-START_HOLD);
+        const p=Math.min(1, Math.max(0, (cur-START_HOLD)/span));
         window.scrollTo(0, startY+(endY-startY)*p);
-        if(p>=0.995){ finishJourney(); return; }
+        if(p>=1){ finishJourney(); return; }
       }
     }
     lpRaf=requestAnimationFrame(tick);
@@ -1354,7 +1360,7 @@ if(searchChipsEl){
     box.classList.add("lp-center");
     box.style.zIndex="150";  // 暗転(200)の裏に隠しておく
     setTimeout(()=>{
-      startY=debutCard.getBoundingClientRect().top+window.scrollY-window.innerHeight*0.35;
+      startY=debutCard.getBoundingClientRect().top+window.scrollY-window.innerHeight*0.5;  // カードが画面中央に
       const nb=document.querySelector(".now-block");
       endY=nb ? nb.getBoundingClientRect().top+window.scrollY-window.innerHeight*0.5 : document.body.scrollHeight-window.innerHeight;
       journeyOn=true;
