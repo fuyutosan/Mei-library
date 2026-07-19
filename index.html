@@ -374,6 +374,35 @@
     max-width:240px;
   }
   #lp-player-box .lp-note{font-size:0.7rem; color:var(--muted); margin-top:4px; text-wrap:pretty;}
+  /* ===== LOVEペディア:本が開くカットイン ===== */
+  #lp-cutin{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(10,10,20,0.8);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:22px;
+    animation:lpFadeIn 0.3s ease;
+  }
+  #lp-cutin.out{opacity:0; transition:opacity 0.45s;}
+  @keyframes lpFadeIn{from{opacity:0}to{opacity:1}}
+  .lp-book{width:230px; height:158px; position:relative; perspective:1100px;}
+  .lp-pages{position:absolute; inset:0; background:#fdfbf2; border-radius:6px 10px 10px 6px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.5);}
+  .lp-page{position:absolute; inset:0; background:#fffef8; border-radius:6px 10px 10px 6px;
+    transform-origin:left center; box-shadow:inset -12px 0 20px rgba(0,0,0,0.06);}
+  .lp-page.p1{animation:lpFlip 0.55s 1.15s forwards ease-in;}
+  .lp-page.p2{animation:lpFlip 0.55s 1.45s forwards ease-in;}
+  .lp-page.p3{animation:lpFlip 0.55s 1.75s forwards ease-in;}
+  .lp-cover{position:absolute; inset:0;
+    background:linear-gradient(135deg,#f06292 0%, #e91e63 55%, #ad1457 100%);
+    border-radius:6px 10px 10px 6px;
+    transform-origin:left center;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:bold; font-size:1.15rem; letter-spacing:0.06em;
+    animation:lpFlip 0.9s 0.25s forwards ease-in-out;
+    backface-visibility:hidden;
+  }
+  @keyframes lpFlip{to{transform:rotateY(-165deg)}}
+  .lp-note-ad{color:#fff; font-size:0.8rem; opacity:0.85; text-align:center; text-wrap:pretty;}
   /* ===== 検索デモ ===== */
   .search-box{
     display:flex;
@@ -1234,8 +1263,23 @@ if(searchChipsEl){
     if(e.target && e.target.closest && (e.target.closest("#lp-player-box")||e.target.closest(".lovepedia-btn"))) return;
     if(journeyOn) stopLp();
   },{passive:true}));
+  function showBookCutin(){
+    const ov=document.createElement("div");
+    ov.id="lp-cutin";
+    ov.innerHTML=`<div class="lp-book">
+      <div class="lp-pages"></div>
+      <div class="lp-page p3"></div>
+      <div class="lp-page p2"></div>
+      <div class="lp-page p1"></div>
+      <div class="lp-cover">LOVEペディア</div>
+    </div>
+    <div class="lp-note-ad">※YouTubeの曲が再生されます。<span style="white-space:nowrap">広告が流れる</span>可能性があります</div>`;
+    document.body.appendChild(ov);
+    setTimeout(()=>{ ov.classList.add("out"); setTimeout(()=>ov.remove(), 500); }, 2600);
+  }
   btn.addEventListener("click", ()=>{
     if(journeyOn){ stopLp(); return; }
+    showBookCutin();
     expandAllYears();
     box.style.display="block";
     setTimeout(()=>{
