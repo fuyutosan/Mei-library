@@ -1307,7 +1307,10 @@ if(searchChipsEl){
       const dur=lpPlayer.getDuration();
       const cur=lpPlayer.getCurrentTime ? lpPlayer.getCurrentTime() : 0;
       if(dur>120 && cur>0){  // 広告は数十秒＝長さ120秒超のときだけ本編と判定
-        if(!journeyStarted){ journeyStarted=true; dismissCutin(); }  // 曲がはじまった＝光が晴れて旅がはじまる
+        if(!journeyStarted){
+          if(performance.now()-cutinT0 < CUTIN_MIN_MS){ lpRaf=requestAnimationFrame(tick); return; }  // 演出が終わるまで待つ
+          journeyStarted=true; dismissCutin();  // 光が晴れて旅がはじまる
+        }
         const p=Math.min(1, cur/dur);
         window.scrollTo(0, startY+(endY-startY)*p);
         if(p>=0.995){ finishJourney(); return; }
@@ -1320,7 +1323,8 @@ if(searchChipsEl){
     if(e.target && e.target.closest && (e.target.closest("#lp-player-box")||e.target.closest(".lovepedia-btn"))) return;
     if(journeyOn) stopLp();
   },{passive:true}));
-  let cutinOv=null, journeyStarted=false;
+  let cutinOv=null, journeyStarted=false, cutinT0=0;
+  const CUTIN_MIN_MS=5600;  // 表紙鑑賞→パカッ→光まで、曲が先に始まっても必ず見せる
   function showBookCutin(){
     const ov=document.createElement("div");
     ov.id="lp-cutin"; cutinOv=ov;
@@ -1343,6 +1347,7 @@ if(searchChipsEl){
   }
   btn.addEventListener("click", ()=>{
     if(journeyOn){ stopLp(); return; }
+    cutinT0=performance.now();
     showBookCutin();
     expandAllYears();
     box.style.display="block";
