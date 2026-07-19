@@ -416,6 +416,19 @@
     animation:lpFadeIn 0.8s 2.3s forwards; text-wrap:pretty; text-align:center;}
   @keyframes lpFlip{to{transform:rotateY(-165deg)}}
   .lp-note-ad{color:#fff; font-size:0.8rem; opacity:0.85; text-align:center; text-wrap:pretty;}
+  /* 光に包まれる演出 */
+  #lp-cutin .lp-glow{position:absolute; left:50%; top:46%; width:24px; height:24px;
+    border-radius:50%; background:#fff; box-shadow:0 0 90px 70px #fff;
+    transform:translate(-50%,-50%) scale(0); pointer-events:none;}
+  #lp-cutin.lp-light .lp-glow{animation:lpGlow 1.5s forwards ease-in;}
+  @keyframes lpGlow{to{transform:translate(-50%,-50%) scale(120);}}
+  #lp-cutin.lp-light .lp-book{opacity:0; transition:opacity 0.7s 0.5s;}
+  #lp-cutin.lp-light .lp-note-ad{opacity:0; transition:opacity 0.6s;}
+  #lp-player-box.lp-center{
+    right:auto; bottom:auto; left:50%; top:54%;
+    transform:translate(-50%,-50%) scale(1.15);
+    z-index:220;
+  }
   /* ===== 検索デモ ===== */
   .search-box{
     display:flex;
@@ -1255,6 +1268,8 @@ if(searchChipsEl){
   }
   function stopLp(){
     journeyOn=false;
+    journeyStarted=false;
+    dismissCutin();
     if(lpRaf){ cancelAnimationFrame(lpRaf); lpRaf=null; }
     if(lpPlayer && lpPlayer.pauseVideo) lpPlayer.pauseVideo();
     box.style.display="none";
@@ -1283,6 +1298,7 @@ if(searchChipsEl){
       const dur=lpPlayer.getDuration();
       const cur=lpPlayer.getCurrentTime ? lpPlayer.getCurrentTime() : 0;
       if(dur>0 && cur>0){
+        if(!journeyStarted){ journeyStarted=true; dismissCutin(); }  // 曲がはじまった＝光が晴れて旅がはじまる
         const p=Math.min(1, cur/dur);
         window.scrollTo(0, startY+(endY-startY)*p);
         if(p>=0.995){ finishJourney(); return; }
@@ -1295,19 +1311,28 @@ if(searchChipsEl){
     if(e.target && e.target.closest && (e.target.closest("#lp-player-box")||e.target.closest(".lovepedia-btn"))) return;
     if(journeyOn) stopLp();
   },{passive:true}));
+  let cutinOv=null, journeyStarted=false;
   function showBookCutin(){
     const ov=document.createElement("div");
-    ov.id="lp-cutin";
-    ov.innerHTML=`<div class="lp-book">
+    ov.id="lp-cutin"; cutinOv=ov;
+    ov.innerHTML=`<div class="lp-glow"></div><div class="lp-book">
       <div class="lp-pages"></div>
       <div class="lp-page p3"></div>
       <div class="lp-page p2"></div>
       <div class="lp-page p1"></div>
       <div class="lp-cover"><span class="lpc-title">Love Pedia</span><span class="lpc-heart">&#10086;</span><span class="lpc-sub">Morning musume&#12290;'20</span></div>
     </div>
-    <div class="lp-note-ad">※YouTubeの曲が再生されます。<span style="white-space:nowrap">広告が流れる</span>可能性があります</div>`;
+    <div class="lp-note-ad">※音が出ます。<span style="white-space:nowrap">広告が流れたら</span>、終わるまでちょっと待っててね。<br><span style="white-space:nowrap">曲がはじまると</span>、旅がはじまるよ</div>`;
     document.body.appendChild(ov);
-    setTimeout(()=>{ ov.classList.add("out"); setTimeout(()=>ov.remove(), 500); }, 2600);
+    // 本が開ききったら、光に包まれる（曲がはじまるまで光の中で待つ）
+    setTimeout(()=>{
+      ov.classList.add("lp-light");
+      box.classList.add("lp-center");
+    }, 1900);
+  }
+  function dismissCutin(){
+    if(cutinOv){ const o=cutinOv; cutinOv=null; o.classList.add("out"); setTimeout(()=>o.remove(), 500); }
+    box.classList.remove("lp-center");
   }
   btn.addEventListener("click", ()=>{
     if(journeyOn){ stopLp(); return; }
