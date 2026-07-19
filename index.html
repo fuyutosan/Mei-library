@@ -666,7 +666,7 @@
       <div class="pl-head">🎵 プレイリスト<span style="white-space:nowrap">「めいちゃんの歩み」</span> <span style="white-space:nowrap">— デビュー曲から発売順</span></div>
       <div id="spotify-embed"><iframe src="https://open.spotify.com/embed/playlist/6ek224IdV9X5SgsPxfqvaX" width="100%" height="152" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" title="めいちゃんの歩み プレイリスト"></iframe></div>
       <button id="music-journey-btn" type="button">♪▶ 曲と一緒に年表をめぐる</button>
-      <p class="pl-note">押すと再生とゆっくりスクロールが始まるよ（音が出ます）</p>
+      <p class="pl-note">押すと再生とゆっくりスクロールが始まるよ（音が出ます）。<span style="white-space:nowrap">Spotifyにログイン済み</span>だとフル再生、未ログインだと30秒ずつの試聴になるよ</p>
     </div>
     <div class="timeline" id="timeline-root"></div>
 
@@ -887,7 +887,7 @@ function indexSearch(q){
 function renderResults(list, query){
   if(query.length === 0){
     resultsEl.innerHTML = "";
-    metaEl.textContent = `全${blogData.length}件の公式ブログ記事を、タイトルと本文まるごとから検索できます。`;
+    metaEl.innerHTML = `全${blogData.length}件の公式ブログ記事を、タイトルと<span style="white-space:nowrap">本文まるごと</span>から検索できます。`;
     return;
   }
   if(list.length === 0){
@@ -1207,12 +1207,16 @@ if(searchChipsEl){
         {uri:SYNC_PLAN[0].uris[0], height:152},
         (c)=>{
           spCtrl=c; currentUri=SYNC_PLAN[0].uris[0];
+          let lastPos=0;
           c.addListener("playback_update",(e)=>{
             const d=e.data||{};
-            // 曲が終わったら頭からループ（次の切り替え点まで無音にしない）
-            if(musicMode && d.duration>0 && d.position>=d.duration-600 && !d.isPaused){
+            // 曲（または30秒プレビュー）が最後まで行って止まったら、頭に戻して再生し直す
+            // ＝未ログインのプレビュー切れでも次の切り替え点まで無音にしない
+            if(musicMode && d.duration>0 && d.position>=d.duration-1200){
               c.seek(0);
+              c.play();
             }
+            lastPos=d.position||0;
           });
           c.play();
         });
