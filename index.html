@@ -345,6 +345,61 @@
   }
   .history-empty{color:var(--muted); font-size:0.85rem;}
 
+  /* 今日のめいちゃん：正方形タイルのグリッド（年数が増えても自動で折り返す） */
+  .history-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+    gap:10px;
+  }
+  a.history-tile{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    aspect-ratio:1/1;
+    background:var(--card-bg);
+    border:1px solid #ddd;
+    border-radius:12px;
+    padding:12px;
+    text-decoration:none;
+    color:var(--text);
+    overflow:hidden;
+    transition:transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  a.history-tile:hover, a.history-tile:focus-visible{
+    transform:translateY(-4px);
+    box-shadow:0 8px 18px rgba(0,30,90,0.15);
+    border-color:var(--mei-blue-light);
+  }
+  .ht-badge{
+    align-self:flex-start;
+    background:var(--mei-blue);
+    color:#fff;
+    font-size:0.72rem;
+    font-weight:bold;
+    padding:2px 9px;
+    border-radius:999px;
+  }
+  .ht-date{font-size:0.72rem; color:var(--muted);}
+  .ht-title{
+    font-weight:bold;
+    font-size:0.82rem;
+    line-height:1.45;
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .ht-snippet{
+    font-size:0.75rem;
+    color:#555;
+    line-height:1.5;
+    display:-webkit-box;
+    -webkit-line-clamp:3;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .ht-more{margin-top:auto; font-size:0.72rem; color:var(--mei-green); font-weight:bold;}
+
   /* ===== パンダさん愛の統計コーナー ===== */
   .stat-block{
     margin-top:32px;
@@ -551,7 +606,7 @@
   </div>
 </footer>
 
-<script src="blog_meta.js?v=2"></script>
+<script src="blog_meta.js?v=4"></script>
 <script>
 // ===== 二軸年表データ（骨格層 main / 詳細層 detail の二層構造） =====
 // side: "act"=活動遍歴 / "panda"=パンダさん愛遍歴
@@ -754,6 +809,15 @@ function makeHistoryCard(entry, badgeText){
     <a class="hc-link" href="https://ameblo.jp/morningmusume15ki/entry-${entry.e}.html" target="_blank" rel="noopener">続きは公式ブログで</a>
   </div>`;
 }
+function makeHistoryTile(entry, badgeText){
+  return `<a class="history-tile" href="https://ameblo.jp/morningmusume15ki/entry-${entry.e}.html" target="_blank" rel="noopener">
+    <span class="ht-badge">${escapeHtmlG(badgeText)}</span>
+    <span class="ht-date">${entry.d}</span>
+    <span class="ht-title">${escapeHtmlG(entry.t)}</span>
+    <span class="ht-snippet">${escapeHtmlG(entry.s)}</span>
+    <span class="ht-more">公式ブログで読む →</span>
+  </a>`;
+}
 function dayOfYearMMDD(mm, dd){
   // 閏日の影響を避けるため非閏年(2001年)基準で通算日を計算する
   const d = new Date(Date.UTC(2001, mm - 1, dd));
@@ -776,15 +840,15 @@ function renderTodayInHistory(){
 
   const exact = window.BLOG_META.filter(a => a.d.slice(5,10) === todayMMDD);
   if(exact.length){
-    const cards = exact
+    const tiles = exact
       .slice()
       .sort((x,y)=> x.d.localeCompare(y.d))
       .map(entry => {
         const yearsAgo = thisYear - parseInt(entry.d.slice(0,4), 10);
         const badge = yearsAgo > 0 ? `${yearsAgo}年前の今日` : "今日";
-        return makeHistoryCard(entry, badge);
+        return makeHistoryTile(entry, badge);
       }).join("");
-    root.innerHTML = cards;
+    root.innerHTML = `<div class="history-grid">${tiles}</div>`;
     return;
   }
 
@@ -808,13 +872,13 @@ function renderTodayInHistory(){
   });
 
   if(bestEntries.length){
-    const cards = bestEntries
+    const tiles = bestEntries
       .slice()
       .sort((x,y)=> y.d.localeCompare(x.d))
-      .slice(0,3)
-      .map(entry => makeHistoryCard(entry, "この日の近くのめいちゃん"))
+      .slice(0,4)
+      .map(entry => makeHistoryTile(entry, "この日の近くのめいちゃん"))
       .join("");
-    root.innerHTML = cards;
+    root.innerHTML = `<div class="history-grid">${tiles}</div>`;
   } else {
     root.innerHTML = `<p class="history-empty">この時期の記事は見つかりませんでした🐼</p>`;
   }
