@@ -351,6 +351,29 @@
     transition:transform 0.15s;
   }
   .rare-links a:hover{transform:translateY(-2px);}
+  /* ===== 隠しコマンド:LOVEペディアの旅 ===== */
+  .lovepedia-btn{
+    display:inline-block;
+    margin-top:10px;
+    font-size:0.78rem;
+    color:var(--mei-blue);
+    opacity:0.55;
+    background:none;
+    border:1px dashed rgba(0,51,160,0.35);
+    border-radius:999px;
+    padding:5px 14px;
+    cursor:pointer;
+    transition:opacity 0.2s;
+  }
+  .lovepedia-btn:hover{opacity:1;}
+  #lp-player-box{
+    position:fixed; right:12px; bottom:12px; z-index:90;
+    display:none;
+    background:#fff; border:2px solid var(--mei-blue); border-radius:12px;
+    padding:8px; box-shadow:0 6px 18px rgba(0,0,0,0.25);
+    max-width:240px;
+  }
+  #lp-player-box .lp-note{font-size:0.7rem; color:var(--muted); margin-top:4px; text-wrap:pretty;}
   /* ===== 検索デモ ===== */
   .search-box{
     display:flex;
@@ -680,14 +703,6 @@
       <span class="legend-item"><span class="legend-dot act"></span>活動遍歴</span>
       <span class="legend-item"><span class="legend-dot panda"></span>パンダさん愛遍歴</span>
     </div>
-    <div class="playlist-box">
-      <div class="pl-head">🎵 <span style="white-space:nowrap">「めいちゃんの歩み」</span> <span style="white-space:nowrap">— デビュー曲から発売順の</span><span style="white-space:nowrap">インストと一緒に</span></div>
-      <button id="music-journey-btn" type="button">♪▶ 曲と一緒に年表をめぐる</button>
-      <div id="now-playing-label" style="font-size:0.85rem; font-weight:bold; color:#2c7a31; margin-top:8px;"></div>
-      <div id="spotify-embed" style="margin-top:8px;"></div>
-      <a href="https://open.spotify.com/playlist/6ek224IdV9X5SgsPxfqvaX" target="_blank" rel="noopener" style="display:inline-block; margin-top:8px; font-size:0.78rem; color:var(--mei-blue); font-weight:bold;">フルで聴きたい人はSpotifyでプレイリストを開く →</a>
-      <p class="pl-note">押すと、各曲30秒ずつ×20曲＝<span style="white-space:nowrap">約10分の旅</span>が始まるよ（音が出ます）。広告なし・ログイン不要。途中で手を触れると止まるよ</p>
-    </div>
     <div class="timeline" id="timeline-root"></div>
 
     <div class="now-block">
@@ -764,7 +779,7 @@ const yearTitles = {"2016":"北海道からの一歩","2018":"磨き続けた研
 
 function citationHtml(item){
   if(item.srcType === "blog" && item.entryId){
-    return `（出典: <a href="https://ameblo.jp/morningmusume15ki/entry-${item.entryId}.html" target="_blank" rel="noopener">No.${item.no}</a>）`;
+    return `（出典: <a href="https://ameblo.jp/morningmusume15ki/entry-${item.entryId}.html" target="_blank" rel="noopener">No.${String(item.no).replace(/^No\.?/,"")}</a>）`;
   }
   if(item.src){
     return `（出典: ${item.src}）`;
@@ -1173,89 +1188,74 @@ if(searchChipsEl){
   });
 })();
 
-// ===== ♪▶ 曲と一緒に年表をめぐる（本人が押したときだけ音が出る） =====
-// v5(Spotify): 30秒×20曲=10分の旅。時間主導で「30秒でちょうど次の持ち場へ着く」速度に自動調整
+
+// ===== 隠しコマンド:「…LOVEペディアを開く」＝曲の進行度でスクロールを駆動する旅 =====
+// 広告の長さは不定なので時計では測らない。曲が何%進んだかに位置を追従させる
+// （広告中は曲が進まない→スクロールも待つ。曲終了＝「そして、現在——」到着）
 (function(){
-  const btn=document.getElementById("music-journey-btn");
-  if(!btn) return;
-  const SYNC_PLAN=[{"key":null,"uris":["spotify:track:52uWx0FAr0ijggdOJtS2QI","spotify:track:7jndQa27OJ9gV9aGQTedJL","spotify:track:4rwo5w3L1RtO2d64JhIz8p"],"names":["KOKORO&KARADA - Instrumental","LOVEペディア - Instrumental","人間関係No way way - Instrumental"]},{"key":"純情エビデンス/ギューされたいだけなのに","uris":["spotify:track:6v2y0CJDVNMm818GzeApPW","spotify:track:0AzpLzrp08UEbzausfUyzR"],"names":["純情エビデンス - Instrumental","ギューされたいだけなのに - Instrumental"]},{"key":"Teenage Solution/よしよししてほしいの/ビートの惑星","uris":["spotify:track:1TlxcyleFL90eVmP2hylJ3","spotify:track:7Bpp10EVM8ZCtbqMg6XJBq","spotify:track:2yL8cWVwEsje5LnZL8LD2r"],"names":["Teenage Solution - Instrumental","よしよししてほしいの - Instrumental","ビートの惑星 - Instrumental"]},{"key":"Chu Chu Chu 僕らの未来/大・人生 Never Been Better!","uris":["spotify:track:1uDYdlcbzHlpnlZ6iCTkQX","spotify:track:5SCuu7CINT3n9T9dnqnYUS"],"names":["Chu Chu Chu 僕らの未来 - Instrumental","大･人生 Never Been Better！ - Instrumental"]},{"key":"Swing Swing Paradise/Happy birthday to Me!","uris":["spotify:track:17h4DHkMGPMikt6euWyReh","spotify:track:6TyckdAwUdHD2v2GZmnbkM"],"names":["Swing Swing Paradise - Special Edit Instrumental","Happy birthday to Me！ - Instrumental"]},{"key":"すっごいFEVER！/Wake-up Call/Neverending Shine","uris":["spotify:track:3aQ5RlJ3rbS0xA3Sq3vxNk","spotify:track:1S5F1WZ544aym3SaDQBfo3"],"names":["すっごいFEVER！ - Instrumental","Wake-up Call～目覚めるとき～ - Instrumental"]},{"key":"なんだかセンチメンタルな時の歌/最KIYOU","uris":["spotify:track:0xqxOqL85CQa7DzS25QWoW","spotify:track:0U7KCppu1z8QfNqbdwan9S"],"names":["なんだかセンチメンタルな時の歌 - Instrumental","最KIYOU - Instrumental"]},{"key":"気になるその気の歌/明るく良い子","uris":["spotify:track:6sUFkQJ8Z1B6lCJnNqzW8E","spotify:track:2tbmBJ9dLUeKLXLAbHjIHo"],"names":["気になるその気の歌 - Instrumental","明るく良い子 - Instrumental"]},{"key":"てか HAPPYのHAPPY！/私のラミンタッチオーネ","uris":["spotify:track:5y6yU4VUvK4WSBVKgA87nP","spotify:track:5oM3FW7OblUGVp9hBhK7Zf"],"names":["てか HAPPYのHAPPY！ - Instrumental","私のラミンタッチオーネ（Lamentazione） - Instrumental"]}];
-  const TRACK_SEC=30;
-  let spCtrl=null, apiLoading=false, journeyRaf=null, zones=[], idx=0, zoneT0=0;
+  const LP_VIDEO="bBSpO7uNxtk"; // LOVEペディア (Instrumental) 公式
+  const debutCard=document.querySelector('.music-links[data-mtitle^="KOKORO&KARADA"]');
+  if(!debutCard) return;
+  const btn=document.createElement("button");
+  btn.type="button"; btn.className="lovepedia-btn";
+  btn.textContent="…LOVEペディアを開く";
+  debutCard.closest(".t-cell").appendChild(btn);
+  const box=document.createElement("div");
+  box.id="lp-player-box";
+  box.innerHTML='<div id="lp-player"></div><div class="lp-note">♪ LOVEペディアと現在まで旅します（広告が出たらごめんね、少し待ってて）</div>';
+  document.body.appendChild(box);
+  let lpPlayer=null, lpRaf=null, startY=0, endY=0, journeyOn=false;
   function expandAllYears(){
     document.querySelectorAll(".year-toggle-btn").forEach(b=>{
       const block=document.getElementById(b.dataset.target);
       if(block && !block.classList.contains("open")) b.click();
     });
   }
-  function cardY(key){
-    const el=document.querySelector(`.music-links[data-mtitle="${key.replace(/"/g,'')}"]`);
-    if(!el) return null;
-    return el.getBoundingClientRect().top + window.scrollY - window.innerHeight*0.35;
+  function stopLp(){
+    journeyOn=false;
+    if(lpRaf){ cancelAnimationFrame(lpRaf); lpRaf=null; }
+    if(lpPlayer && lpPlayer.pauseVideo) lpPlayer.pauseVideo();
+    box.style.display="none";
   }
-  function buildZones(){
-    const bounds=[];
-    SYNC_PLAN.forEach(seg=>{ bounds.push(seg.key===null ? 0 : cardY(seg.key)); });
-    bounds.push(document.body.scrollHeight - window.innerHeight);
-    zones=[];
-    for(let i=0;i<SYNC_PLAN.length;i++){
-      const a=bounds[i], b=bounds[i+1];
-      if(a===null || b===null || b<=a) continue;
-      const n=SYNC_PLAN[i].uris.length;
-      for(let t=0;t<n;t++){
-        zones.push({start:a+(b-a)*t/n, end:a+(b-a)*(t+1)/n, uri:SYNC_PLAN[i].uris[t], name:SYNC_PLAN[i].names[t]});
+  function tick(){
+    if(!journeyOn){ return; }
+    if(lpPlayer && lpPlayer.getDuration){
+      const dur=lpPlayer.getDuration();
+      const cur=lpPlayer.getCurrentTime ? lpPlayer.getCurrentTime() : 0;
+      if(dur>0 && cur>0){
+        const p=Math.min(1, cur/dur);
+        window.scrollTo(0, startY+(endY-startY)*p);
+        if(p>=0.999){ stopLp(); return; }
       }
     }
+    lpRaf=requestAnimationFrame(tick);
   }
-  function setLabel(name){
-    const label=document.getElementById("now-playing-label");
-    if(label) label.textContent="♪ "+name;
-  }
-  function stopJourney(){
-    if(journeyRaf){ cancelAnimationFrame(journeyRaf); journeyRaf=null; }
-    if(spCtrl) spCtrl.pause();
-    setLabel("");
-  }
-  function runZone(){
-    if(idx>=zones.length){ stopJourney(); return; }
-    const z=zones[idx];
-    if(spCtrl){ spCtrl.loadUri(z.uri); spCtrl.play(); }
-    setLabel(z.name);
-    zoneT0=performance.now();
-    function step(now){
-      const p=Math.min(1,(now-zoneT0)/(TRACK_SEC*1000));
-      window.scrollTo(0, z.start+(z.end-z.start)*p);
-      if(p>=1){ idx++; runZone(); return; }
-      journeyRaf=requestAnimationFrame(step);
-    }
-    journeyRaf=requestAnimationFrame(step);
-  }
-  // 手動操作で旅を止める（ボタン上の操作は除く）
   ["wheel","touchstart","keydown"].forEach(ev=> window.addEventListener(ev,(e)=>{
-    if(e.target && e.target.closest && (e.target.closest("#float-nav")||e.target.closest(".playlist-box"))) return;
-    if(journeyRaf) stopJourney();
+    if(e.target && e.target.closest && (e.target.closest("#lp-player-box")||e.target.closest(".lovepedia-btn"))) return;
+    if(journeyOn) stopLp();
   },{passive:true}));
   btn.addEventListener("click", ()=>{
-    if(journeyRaf){ stopJourney(); return; }
+    if(journeyOn){ stopLp(); return; }
     expandAllYears();
+    box.style.display="block";
     setTimeout(()=>{
-      buildZones();
-      // 現在位置から一番近い持ち場から再開（先頭なら1曲目から）
-      const y=window.scrollY;
-      idx=0;
-      for(let i=0;i<zones.length;i++){ if(zones[i].start<=y) idx=i; }
-      if(y<10) idx=0;
-      const go=()=>{ runZone(); };
-      if(spCtrl){ go(); return; }
-      if(apiLoading) return;
-      apiLoading=true;
-      window.onSpotifyIframeApiReady=(API)=>{
-        API.createController(document.getElementById("spotify-embed"),
-          {uri:zones[0].uri, height:80},
-          (c)=>{ spCtrl=c; go(); });
+      startY=debutCard.getBoundingClientRect().top+window.scrollY-window.innerHeight*0.35;
+      const nb=document.querySelector(".now-block");
+      endY=nb ? nb.getBoundingClientRect().top+window.scrollY-window.innerHeight*0.5 : document.body.scrollHeight-window.innerHeight;
+      journeyOn=true;
+      if(lpPlayer){ lpPlayer.seekTo(0); lpPlayer.playVideo(); tick(); return; }
+      window.onYouTubeIframeAPIReady=()=>{
+        lpPlayer=new YT.Player("lp-player",{
+          width:224, height:126, videoId:LP_VIDEO,
+          playerVars:{autoplay:1, playsinline:1},
+          events:{
+            onReady:(e)=>{ e.target.playVideo(); tick(); },
+            onStateChange:(e)=>{ if(e.data===YT.PlayerState.ENDED){ window.scrollTo(0,endY); stopLp(); } }
+          }
+        });
       };
       const s=document.createElement("script");
-      s.src="https://open.spotify.com/embed/iframe-api/v1";
-      s.onerror=()=>{ apiLoading=false; };
+      s.src="https://www.youtube.com/iframe_api";
       document.head.appendChild(s);
     }, 450);
   });
