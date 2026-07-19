@@ -765,7 +765,7 @@ function musicLinksHtml(item){
   const apple = APPLE_LINKS[title] || ("https://music.apple.com/jp/search?term=" + q);
   const spotify = SPOTIFY_LINKS[title] || ("https://open.spotify.com/search/" + q);
   const ytm = YTM_LINKS[title] || ("https://music.youtube.com/search?q=" + q);
-  return `<div class="music-links">
+  return `<div class="music-links" data-mtitle="${title.replace(/"/g,"")}">
     <a class="ml-apple" href="${apple}" target="_blank" rel="noopener">&#9834; Apple Music</a>
     <a class="ml-spotify" href="${spotify}" target="_blank" rel="noopener">&#9835; Spotify</a>
     <a class="ml-ytm" href="${ytm}" target="_blank" rel="noopener">&#9654; YT Music</a>
@@ -1142,23 +1142,64 @@ if(searchChipsEl){
 })();
 
 // ===== ♪▶ 曲と一緒に年表をめぐる（本人が押したときだけ音が出る） =====
+// v2: 固定速度スクロール×CD発売カード通過で曲が切り替わる同期モード
 (function(){
   const btn=document.getElementById("music-journey-btn");
   if(!btn) return;
-  let spCtrl=null, apiLoading=false;
+  const SYNC_TRACKS={"純情エビデンス/ギューされたいだけなのに":"spotify:track:6v2y0CJDVNMm818GzeApPW","Teenage Solution/よしよししてほしいの/ビートの惑星":"spotify:track:1TlxcyleFL90eVmP2hylJ3","Chu Chu Chu 僕らの未来/大・人生 Never Been Better!":"spotify:track:1uDYdlcbzHlpnlZ6iCTkQX","Swing Swing Paradise/Happy birthday to Me!":"spotify:track:17h4DHkMGPMikt6euWyReh","すっごいFEVER！/Wake-up Call/Neverending Shine":"spotify:track:3aQ5RlJ3rbS0xA3Sq3vxNk","なんだかセンチメンタルな時の歌/最KIYOU":"spotify:track:0xqxOqL85CQa7DzS25QWoW","気になるその気の歌/明るく良い子":"spotify:track:6sUFkQJ8Z1B6lCJnNqzW8E","てか HAPPYのHAPPY！/私のラミンタッチオーネ":"spotify:track:5y6yU4VUvK4WSBVKgA87nP","KOKORO&KARADA／LOVEペディア／人間関係No way way":"spotify:track:52uWx0FAr0ijggdOJtS2QI"};
+  const FIRST_URI=SYNC_TRACKS["KOKORO&KARADA／LOVEペディア／人間関係No way way"];
+  let spCtrl=null, apiLoading=false, musicMode=false, currentUri=null, lastDur=0;
+  function expandAllYears(){
+    document.querySelectorAll(".year-toggle-btn").forEach(b=>{
+      const block=document.getElementById(b.dataset.target);
+      if(block && !block.classList.contains("open")) b.click();
+    });
+  }
   function startScroll(){
     const auto=document.getElementById("fn-auto");
     if(auto && !auto.classList.contains("auto-on")) auto.click();
   }
+  function switchTo(uri){
+    if(!spCtrl || !uri || uri===currentUri) return;
+    currentUri=uri;
+    spCtrl.loadUri(uri);
+    spCtrl.play();
+  }
+  // CD発売カードが画面中央帯に入ったら、その曲へ切り替え
+  const io2=new IntersectionObserver((ents)=>{
+    if(!musicMode) return;
+    ents.forEach(en=>{
+      if(!en.isIntersecting) return;
+      const t=en.target.getAttribute("data-mtitle");
+      if(t && SYNC_TRACKS[t]) switchTo(SYNC_TRACKS[t]);
+    });
+  },{rootMargin:"-35% 0px -35% 0px"});
+  function armObservers(){
+    document.querySelectorAll(".music-links[data-mtitle]").forEach(el=> io2.observe(el));
+  }
   btn.addEventListener("click", ()=>{
+    musicMode=true;
+    expandAllYears();
+    armObservers();
     startScroll();
-    if(spCtrl){ spCtrl.play(); return; }
+    if(spCtrl){ if(!currentUri){ switchTo(FIRST_URI); } else { spCtrl.play(); } return; }
     if(apiLoading) return;
     apiLoading=true;
     window.onSpotifyIframeApiReady=(API)=>{
       API.createController(document.getElementById("spotify-embed"),
-        {uri:"spotify:playlist:6ek224IdV9X5SgsPxfqvaX", height:152},
-        (c)=>{ spCtrl=c; c.play(); });
+        {uri:FIRST_URI, height:152},
+        (c)=>{
+          spCtrl=c; currentUri=FIRST_URI;
+          c.addListener("playback_update",(e)=>{
+            // 曲が終わったら次のカードまでループでつなぐ（30秒プレビューの無音対策）
+            const d=e.data||{};
+            if(d.duration>0){ lastDur=d.duration; }
+            if(musicMode && d.duration>0 && d.position>=d.duration-600 && !d.isPaused){
+              c.seek(0);
+            }
+          });
+          c.play();
+        });
     };
     const s=document.createElement("script");
     s.src="https://open.spotify.com/embed/iframe-api/v1";
