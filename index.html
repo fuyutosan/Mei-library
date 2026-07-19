@@ -417,7 +417,22 @@
   .lp-tbc{position:absolute; right:8%; top:42%; font-size:0.8rem; color:#8a6d3b;
     font-family:Georgia,serif; font-style:italic; opacity:0; animation:lpFadeIn 0.6s 0.2s forwards;}
   .lp-thanks{font-size:1.05rem; font-weight:bold; text-align:center; line-height:2;}
-  .lp-thanks .tl{display:block; text-shadow:0 1px 6px rgba(0,0,0,0.6);}
+  /* 白い微光の縁取りで、暗い背景でも本来のメンバーカラーが判るように */
+  .lp-thanks .tl{display:block;
+    text-shadow:0 0 2px rgba(255,255,255,0.9), 0 0 10px rgba(255,255,255,0.5), 0 1px 6px rgba(0,0,0,0.5);}
+  /* 最後の1行＝大人になっためいちゃんの言葉。文字送りせず、静かに収束して現れる */
+  .lp-thanks .tl-final{
+    margin-top:16px;
+    font-size:1.3rem;
+    color:#0033A0;
+    opacity:0;
+    animation:finalIn 2.6s forwards ease-out;
+    text-shadow:0 0 3px #fff, 0 0 14px rgba(255,255,255,0.85), 0 0 30px rgba(255,255,255,0.45);
+  }
+  @keyframes finalIn{
+    from{opacity:0; letter-spacing:0.45em; filter:blur(7px);}
+    to{opacity:1; letter-spacing:0.08em; filter:blur(0);}
+  }
   /* 一文字ずつ、滲みから浮かび上がる（魔法の読み上げ） */
   .lp-thanks .mc{
     display:inline-block;
@@ -1331,17 +1346,17 @@ if(searchChipsEl){
     </div>
     <div class="lp-thanks" id="lp-thanks"></div>`;
     const LP_LINES=[
-      ["#8edcf5","いろいろあったね",5.3],
-      ["#6fd45f","でも、楽しかったよね！",6.5],
-      ["#ffd94a","ね！楽しかった！",7.7],
-      ["#7d9dff","ありがとう、LOVEペディア",9.7]
+      ["#35c0ee","いろいろあったね",5.3],
+      ["#3DA536","でも、楽しかったよね！",6.5],
+      ["#ffd700","ね！楽しかった！",7.7]
     ];
     ov.querySelector("#lp-thanks").innerHTML=LP_LINES.map(([col,txt,st])=>
       `<span class="tl" style="color:${col}">`+
       Array.from(txt).map((ch,i)=>`<span class="mc" style="animation-delay:${(st+i*0.07).toFixed(2)}s">${ch}</span>`).join("")+
-      `</span>`).join("");
+      `</span>`).join("")
+      +`<span class="tl tl-final" style="animation-delay:9.9s">ありがとう、LOVEペディア</span>`;
     document.body.appendChild(ov);
-    setTimeout(()=>{ ov.classList.add("out"); setTimeout(()=>ov.remove(), 500); }, 12800);
+    setTimeout(()=>{ ov.classList.add("out"); setTimeout(()=>ov.remove(), 500); }, 14000);
   }
   function finishJourney(){
     window.scrollTo(0, endY);
