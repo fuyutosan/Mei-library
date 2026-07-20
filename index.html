@@ -1132,7 +1132,7 @@ function makeHistoryCard(entry, badgeText){
 }
 function tileTitle(t){
   // カードでは「モーニング娘。'XX 15期」の重複プレフィックスを外してタイトル本体から見せる
-  return String(t).replace(/^モーニング娘。'\d+\s*15期\s*/,"");
+  return String(t).replace(/^モーニング娘。'\d+\s*15期\s*/,"").replace(/\s*山﨑愛生』$/,"』");
 }
 function makeHistoryTile(entry, badgeText){
   return `<a class="history-tile" href="https://ameblo.jp/morningmusume15ki/entry-${entry.e}.html" target="_blank" rel="noopener">
