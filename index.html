@@ -1125,16 +1125,20 @@ function escapeHtmlG(s){
 function makeHistoryCard(entry, badgeText){
   return `<div class="history-card">
     <span class="hc-badge">${escapeHtmlG(badgeText)}</span><span class="hc-date">${entry.d}</span>
-    <div class="hc-title">${escapeHtmlG(entry.t)}</div>
+    <div class="hc-title">${escapeHtmlG(tileTitle(entry.t))}</div>
     <div class="hc-snippet">${escapeHtmlG(entry.s)}</div>
     <a class="hc-link" href="https://ameblo.jp/morningmusume15ki/entry-${entry.e}.html" target="_blank" rel="noopener">続きは公式ブログで</a>
   </div>`;
+}
+function tileTitle(t){
+  // カードでは「モーニング娘。'XX 15期」の重複プレフィックスを外してタイトル本体から見せる
+  return String(t).replace(/^モーニング娘。'\d+\s*15期\s*/,"");
 }
 function makeHistoryTile(entry, badgeText){
   return `<a class="history-tile" href="https://ameblo.jp/morningmusume15ki/entry-${entry.e}.html" target="_blank" rel="noopener">
     <span class="ht-badge">${escapeHtmlG(badgeText)}</span>
     <span class="ht-date">${entry.d}</span>
-    <span class="ht-title">${escapeHtmlG(entry.t)}</span>
+    <span class="ht-title">${escapeHtmlG(tileTitle(entry.t))}</span>
     <span class="ht-snippet">${escapeHtmlG(entry.s)}</span>
     <span class="ht-more">公式ブログで読む →</span>
   </a>`;
